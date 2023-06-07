@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+	"time"
 )
 
 type Args struct {
@@ -50,6 +52,13 @@ func TestHttpMockAPI(t *testing.T) {
 		},
 	)
 
+	// GET with context
+	httpmock.RegisterResponder(
+		"GET",
+		"https://example.com/test4",
+		httpmock.NewStringResponder(200, "hello!").Delay(time.Duration(10)),
+	)
+
 	args1 := Args{
 		"GET",
 		"https://example.com/test1",
@@ -89,4 +98,16 @@ func TestHttpMockAPI(t *testing.T) {
 		assert.Equal(t, nil, err)
 	})
 
+	args4 := Args{
+		"GET",
+		"https://example.com/test4",
+		nil,
+		nil,
+	}
+
+	t.Run("context timeout 테스트", func(t *testing.T) {
+		got, err := RequestWithContext(args4.method)
+		assert.Nil(t, got, "RequestWithContext(%v)", args4.method)
+		assert.Error(t, context.DeadlineExceeded, err)
+	})
 }

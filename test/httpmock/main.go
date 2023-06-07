@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,6 +24,7 @@ const (
 	MainUrl         = "https://example.com/test1"
 	RequestParamUrl = "https://example.com/test2"
 	PostUrl         = "https://example.com/test3"
+	ContextUrl      = "https://example.com/test4"
 )
 
 func main() {
@@ -43,6 +45,12 @@ func main() {
 		fmt.Printf("%v", err)
 	}
 	fmt.Println(resp3)
+
+	resp4, err := RequestWithContext("GET")
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
+	fmt.Println(resp4)
 }
 
 func RequestHTTP(method string) (string, error) {
@@ -116,6 +124,30 @@ func RequestWithBody(method string, body *RequestBody) (*ResponseBody, error) {
 	defer resp.Body.Close()
 	resBody, _ := io.ReadAll(resp.Body)
 	fmt.Println(resBody)
+	var respBody *ResponseBody
+	if err := json.Unmarshal(resBody, &respBody); err != nil {
+		return nil, err
+	}
+	return respBody, err
+}
+
+func RequestWithContext(method string) (*ResponseBody, error) {
+	client := &http.Client{}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5))
+	defer cancel()
+
+	req, err := http.NewRequest(method, ContextUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	resBody, _ := io.ReadAll(resp.Body)
 	var respBody *ResponseBody
 	if err := json.Unmarshal(resBody, &respBody); err != nil {
 		return nil, err
