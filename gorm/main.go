@@ -2,15 +2,11 @@ package main
 
 import (
 	"fmt"
+	"go-practice/gorm/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
 )
-
-type Book struct {
-	gorm.Model // ID, CreatedAt, UpdatedAt, DeletedAt 필드를 포함하는 구조체
-	Name       string
-}
 
 func main() {
 	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
@@ -25,14 +21,44 @@ func main() {
 		dbInstance, _ := db.DB()
 		_ = dbInstance.Close()
 	}()
-	// migration
-	err = db.AutoMigrate(&Book{})
+
+	// migration 전에 수행할 작업
+	// 테스트를 위해 테이블을 drop 한다.
+	err = db.Migrator().DropTable(&model.Book{}, &model.Author{})
 	if err != nil {
-		return
+		log.Fatalf("Failed to drop table: %v", err)
 	}
 
+	// migration
+	err = db.AutoMigrate(&model.Book{}, &model.Author{})
+	if err != nil {
+		log.Fatalf("Failed to migrate: %v", err)
+	}
+
+	// 테스트 데이터 생성
+	generateData(db)
+
 	// 데이터 조회
-	var books []Book
+	var books []model.Book
 	db.Find(&books)
 	fmt.Printf("result : (%v)", len(books))
+}
+
+func generateData(db *gorm.DB) {
+	var author []model.Author
+	var book []model.Book
+
+	for i := range [100]int{} {
+		author = append(author, model.Author{
+			Name: fmt.Sprintf("author%v", i),
+		})
+		book = append(book, model.Book{
+			AuthorId: i,
+			Name:     fmt.Sprintf("book%v", i),
+		})
+	}
+
+	// batch insert
+	db.CreateInBatches(author, 100)
+	db.CreateInBatches(book, 100)
 }
