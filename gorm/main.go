@@ -30,13 +30,13 @@ func main() {
 
 	// migration 전에 수행할 작업
 	// 테스트를 위해 테이블을 drop 한다.
-	err = db.Migrator().DropTable(&model.Book{}, &model.Author{})
+	err = db.Migrator().DropTable(&model.Book{}, &model.Author{}, &model.User{}, &model.Order{})
 	if err != nil {
 		log.Fatalf("Failed to drop table: %v", err)
 	}
 
 	// migration
-	err = db.AutoMigrate(&model.Book{}, &model.Author{})
+	err = db.AutoMigrate(&model.Book{}, &model.Author{}, &model.User{}, &model.Order{})
 	if err != nil {
 		log.Fatalf("Failed to migrate: %v", err)
 	}
@@ -48,11 +48,15 @@ func main() {
 	query.SelectOne(db)
 	// 데이터 전체 조회
 	query.SelectAll(db)
+
+	// prelad
+	query.Preload(db)
 }
 
 func generateData(db *gorm.DB) {
 	var author []model.Author
 	var book []model.Book
+	var users []model.User
 
 	for i := range [100]int{} {
 		author = append(author, model.Author{
@@ -62,11 +66,25 @@ func generateData(db *gorm.DB) {
 			AuthorId: i,
 			Name:     fmt.Sprintf("book%v", i),
 		})
+		users = append(users, model.User{
+			Name: fmt.Sprintf("user%v", i),
+			Orders: []model.Order{
+				{
+					Id:    i,
+					Price: i * 1000,
+				},
+				{
+					Id:    i + 1,
+					Price: (i + 1) * 1000,
+				},
+			},
+		})
 	}
 
 	// batch insert
 	db.CreateInBatches(author, 100)
 	db.CreateInBatches(book, 100)
+	db.Create(&users)
 }
 
 func getLogger() logger.Interface {

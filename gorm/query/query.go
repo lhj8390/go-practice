@@ -23,3 +23,15 @@ func SelectAll(db *gorm.DB) {
 	fmt.Println("========== SELECT ALL ===========")
 	fmt.Printf("result : (%v)", len(books))
 }
+
+func Preload(db *gorm.DB) {
+	var users []model.User
+	db.Preload("Orders").Find(&users)
+	fmt.Println("========== PRELOAD ===========")
+	for _, user := range users {
+		fmt.Printf("User: %s\n", user.Name)
+		for _, order := range user.Orders {
+			fmt.Printf("Order ID: %d, Price: %d\n", order.Id, order.Price)
+		}
+	}
+}

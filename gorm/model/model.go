@@ -12,3 +12,18 @@ type Author struct {
 	ID   int
 	Name string
 }
+
+// ================================
+// Eager Loading Example
+// ================================
+
+type User struct {
+	Id     int
+	Name   string
+	Orders []Order
+}
+
+type Order struct {
+	Id    int
+	Price int
+}
