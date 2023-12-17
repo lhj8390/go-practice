@@ -28,15 +28,14 @@ func main() {
 		_ = dbInstance.Close()
 	}()
 
-	// migration 전에 수행할 작업
 	// 테스트를 위해 테이블을 drop 한다.
-	err = db.Migrator().DropTable(&model.Book{}, &model.Author{}, &model.User{}, &model.Order{})
+	err = db.Migrator().DropTable(&model.Book{}, &model.Author{}, &model.Order{}, &model.User{}, &model.Company{})
 	if err != nil {
 		log.Fatalf("Failed to drop table: %v", err)
 	}
 
 	// migration
-	err = db.AutoMigrate(&model.Book{}, &model.Author{}, &model.User{}, &model.Order{})
+	err = db.AutoMigrate(&model.Book{}, &model.Author{}, &model.Order{}, &model.User{}, &model.Company{})
 	if err != nil {
 		log.Fatalf("Failed to migrate: %v", err)
 	}
@@ -49,8 +48,12 @@ func main() {
 	// 데이터 전체 조회
 	query.SelectAll(db)
 
-	// prelad
+	// preload
 	query.Preload(db)
+	// lazy loading (default)
+	query.LazyLoading(db)
+	// Join (Preloading)
+	query.Join(db)
 }
 
 func generateData(db *gorm.DB) {
@@ -70,13 +73,15 @@ func generateData(db *gorm.DB) {
 			Name: fmt.Sprintf("user%v", i),
 			Orders: []model.Order{
 				{
-					Id:    i,
-					Price: i * 1000,
+					Price: (i) * 1000,
 				},
 				{
-					Id:    i + 1,
 					Price: (i + 1) * 1000,
 				},
+			},
+			Company: model.Company{
+				Id:   uint(i),
+				Name: fmt.Sprintf("company%v", i),
 			},
 		})
 	}

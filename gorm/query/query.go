@@ -24,14 +24,41 @@ func SelectAll(db *gorm.DB) {
 	fmt.Printf("result : (%v)", len(books))
 }
 
+// Preload Eager Loading (즉시 로딩) 예제
 func Preload(db *gorm.DB) {
 	var users []model.User
+
+	// SELECT * FROM `orders` WHERE `orders`.`user_id` IN (?,?,?, ....?,?)
+	// SELECT * FROM `users`
 	db.Preload("Orders").Find(&users)
+
 	fmt.Println("========== PRELOAD ===========")
-	for _, user := range users {
-		fmt.Printf("User: %s\n", user.Name)
-		for _, order := range user.Orders {
-			fmt.Printf("Order ID: %d, Price: %d\n", order.Id, order.Price)
-		}
-	}
+	fmt.Printf("User: %s\n", users[0].Name)
+	fmt.Printf("Orders : %d", len(users[0].Orders))
+}
+
+// LazyLoading 기본 조회 예제
+func LazyLoading(db *gorm.DB) {
+	var users []model.User
+
+	// SELECT * FROM `users`
+	db.Find(&users)
+
+	fmt.Println("========== LAZY LOADING ===========")
+	fmt.Printf("User: %s\n", users[0].Name)
+	fmt.Printf("Orders is nil : %v\n", len(users[0].Orders)) // Lazy Loading 이기 때문에 연관 테이블 order 데이터 누락.
+}
+
+func Join(db *gorm.DB) {
+	var users []model.User
+
+	// SELECT `users`.`id`,`users`.`name`,`users`.`company_id`,`Company`.`id` AS `Company__id`,`Company`.`name` AS `Company__name` FROM `users`
+	// LEFT JOIN `companies` `Company` ON `users`.`company_id` = `Company`.`id`
+	db.Joins("Company").Find(&users)
+
+	fmt.Println("========== JOIN (PRELOADING) ===========")
+	fmt.Println("Joins Preloading 은 1:1 관계일 경우에만 사용할 수 있다.")
+	fmt.Printf("User: %s\n", users[0].Name)
+	fmt.Printf("User[0]'s Company : (%v, %v)\n", users[0].Company.Id, users[0].Company.Name)
+
 }

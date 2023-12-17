@@ -18,12 +18,20 @@ type Author struct {
 // ================================
 
 type User struct {
-	Id     int
-	Name   string
-	Orders []Order
+	Id        uint
+	Name      string
+	Orders    []Order
+	CompanyId uint
+	Company   Company
 }
 
 type Order struct {
-	Id    int
-	Price int
+	Id     uint
+	Price  int
+	UserId uint
+}
+
+type Company struct {
+	Id   uint
+	Name string
 }
