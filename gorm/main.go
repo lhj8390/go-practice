@@ -54,6 +54,10 @@ func main() {
 	query.LazyLoading(db)
 	// Join (Preloading)
 	query.Join(db)
+
+	// Associations
+	// find associations
+	query.FindAssociations(db)
 }
 
 func generateData(db *gorm.DB) {
@@ -73,10 +77,10 @@ func generateData(db *gorm.DB) {
 			Name: fmt.Sprintf("user%v", i),
 			Orders: []model.Order{
 				{
-					Price: (i) * 1000,
+					Price: (i + 1) * 1000,
 				},
 				{
-					Price: (i + 1) * 1000,
+					Price: (i + 2) * 1000,
 				},
 			},
 			Company: model.Company{

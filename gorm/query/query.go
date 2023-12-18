@@ -47,6 +47,7 @@ func LazyLoading(db *gorm.DB) {
 	fmt.Println("========== LAZY LOADING ===========")
 	fmt.Printf("User: %s\n", users[0].Name)
 	fmt.Printf("Orders is nil : %v\n", len(users[0].Orders)) // Lazy Loading 이기 때문에 연관 테이블 order 데이터 누락.
+
 }
 
 func Join(db *gorm.DB) {
@@ -60,5 +61,17 @@ func Join(db *gorm.DB) {
 	fmt.Println("Joins Preloading 은 1:1 관계일 경우에만 사용할 수 있다.")
 	fmt.Printf("User: %s\n", users[0].Name)
 	fmt.Printf("User[0]'s Company : (%v, %v)\n", users[0].Company.Id, users[0].Company.Name)
+}
 
+// FindAssociations 연관된 결과 찾기
+func FindAssociations(db *gorm.DB) {
+	var orders []model.Order
+
+	user := model.User{Id: 1, Name: "user0"} // id 가 1 인 User 와 연관된 Order 찾기
+	// SELECT * FROM `orders` WHERE `orders`.`user_id` = ?
+	db.Model(&user).Association("Orders").Find(&orders)
+
+	fmt.Println("========== FIND ASSOCIATIONS ===========")
+	fmt.Printf("User: (%v, %v)\n", user.Id, user.Name)
+	fmt.Printf("Orders[0]: (%v, %v)\n", orders[0].Id, orders[0].Price)
 }
