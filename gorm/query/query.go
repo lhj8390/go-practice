@@ -75,3 +75,37 @@ func FindAssociations(db *gorm.DB) {
 	fmt.Printf("User: (%v, %v)\n", user.Id, user.Name)
 	fmt.Printf("Orders[0]: (%v, %v)\n", orders[0].Id, orders[0].Price)
 }
+
+// AppendAssociations (N:N, 1:N 관계일 경우) 새로운 연관관계 추가, (1:1 관계일 경우) 연관관계 교체
+func AppendAssociations(db *gorm.DB) {
+
+	user := model.User{Id: 1, Name: "user0"}
+	// INSERT INTO `orders` (`price`,`user_id`,`id`) VALUES (?,?,?),,(?,?,?),(?,?,?)
+	// ON CONFLICT (`id`) DO UPDATE SET `user_id`=`excluded`.`user_id` RETURNING `id`
+	db.Model(&user).Association("Orders").Append([]model.Order{
+		{Id: 2, Price: 2000, UserId: 1},
+		{Id: 4, Price: 4000, UserId: 1},
+		{Id: 6, Price: 6000, UserId: 1},
+	})
+
+	// 기존 DB의 값 : Order(1, 1000), Order(2, 2000)
+	// 추가된 값 : Order(2, 2000), Order(4, 4000), Order(6, 6000)  -> 테이블의 연관관계가 변경된다.
+	fmt.Println("========== APPEND ASSOCIATIONS ===========")
+	fmt.Printf("User: (%v, %v)\n", user.Id, user.Name)
+	fmt.Printf("Orders[0], Orders[1], Orders[2]: (%v, %v, %v)\n", user.Orders[0].Price, user.Orders[1].Price, user.Orders[2].Price)
+}
+
+// ReplaceAssociations 새로운 연관관계로 교체 (1:1 관계의 Append Associations 와 동일)
+func ReplaceAssociations(db *gorm.DB) {
+	user := model.User{Id: 1, Name: "user0"}
+	// INSERT INTO `companies` (`name`,`id`) VALUES (?,?) ON CONFLICT DO NOTHING RETURNING `id`
+	// UPDATE `users` SET `company_id`=? WHERE `id` = ?
+	db.Model(&user).Association("Company").Replace(&model.Company{Id: 3, Name: "company22"})
+
+	// 기존 DB의 값 : Company(1, company0)
+	// 추가된 값 : Company(3, company22)
+	// company_id 가 3인 행이 이미 존재하므로 기본이 되는 테이블 (User)의 company_id 만 변경된다.
+	fmt.Println("========== REPLACE ASSOCIATIONS ===========")
+	fmt.Printf("User: (%v, %v)\n", user.Id, user.Name)
+	fmt.Printf("Company: (%v)\n", user.Company)
+}

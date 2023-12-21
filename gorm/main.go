@@ -58,6 +58,10 @@ func main() {
 	// Associations
 	// find associations
 	query.FindAssociations(db)
+	// append associations
+	query.AppendAssociations(db)
+	// replace associations
+	query.ReplaceAssociations(db)
 }
 
 func generateData(db *gorm.DB) {
